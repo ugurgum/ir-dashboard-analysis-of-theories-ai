@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architecture of Global Power: IR Theory Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg-neutral: #fdfbf7;
+            --realism-color: #991b1b;
+            --liberalism-color: #2563eb;
+            --marxism-color: #c2410c;
+            --constructivism-color: #4f46e5;
+            --feminism-color: #0d9488;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-neutral);
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Merriweather', serif; }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 380px;
+            max-height: 450px;
+        }
+
+        #mindmap-container {
+            position: relative;
+            min-height: 650px;
+            width: 100%;
+            overflow: hidden;
+            background: #ffffff;
+            cursor: grab;
+        }
+        
+        #mindmap-container:active { cursor: grabbing; }
+
+        .mindmap-node {
+            position: absolute;
+            z-index: 10;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mindmap-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        #mindmap-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        @media (max-width: 640px) {
+            .chart-container { height: 300px; }
+            #mindmap-container { min-height: 900px; }
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+    </style>
+    <!-- Chosen Palette: Academic Archive - Background (#fdfbf7), Deep Crimson (Realism), Royal Blue (Liberalism), Burnt Orange (Marxism), Indigo (Constructivism), Teal (Feminism). -->
+    
+    <!-- Application Structure Plan:
+         1. Executive Summary & Hero: Introducing IR as a discipline of "Great Debates."
+         2. Theory DNA (Profiler): Advanced Radar Chart with "Comparison Mode" for side-by-side analysis of structural assumptions.
+         3. Intellectual Landscape (Mindmap): Interactive tree showing the genealogy of theories (Rationalist vs Critical).
+         4. The Great Debates (Timeline): Vertical scrollable history of theory development.
+         5. Comparative Matrix: Functional data table for quick cross-referencing of actors, anarchy, and goals.
+         6. The Case Lab: Immersive simulation of Arctic, Climate, and AI governance through all 5 lenses.
+         7. Glossary: Searchable terminal for technical terminology.
+
+         Why this structure? It transitions from high-level categorization to specific historical context, then culminates in practical application, reinforcing understanding through iterative interaction.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Comparison Radar Chart: Enables "Counter-mapping"—showing how Realism's focus on material power contrasts with Constructivism's focus on identity.
+         2. Dynamic Canvas Mindmap: Visualizes non-linear relationships and shared lineages (e.g. how Marxism and Feminism share critical roots).
+         3. Simulation Gauge: A Bar/Progress visual in the Case Lab to show 'Security Tension' vs 'Institutional Trust' predictions.
+         4. NO SVG: All symbols are Unicode. Icons are CSS-styled boxes. Logic is Vanilla JS.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-stone-900 rounded flex items-center justify-center text-white font-bold">IR</div>
+                    <span class="text-xl font-bold text-stone-800 tracking-tight font-serif hidden sm:block">Global Power Architecture</span>
+                </div>
+                <div class="flex items-center space-x-6 text-sm font-semibold">
+                    <button onclick="scrollToSection('profiler')" class="text-stone-500 hover:text-stone-900">DNA</button>
+                    <button onclick="scrollToSection('mindmap-sec')" class="text-stone-500 hover:text-stone-900">Landscape</button>
+                    <button onclick="scrollToSection('matrix')" class="text-stone-500 hover:text-stone-900">Compare</button>
+                    <button onclick="scrollToSection('caselab')" class="text-stone-500 hover:text-stone-900">Lab</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="bg-gradient-to-b from-stone-100 to-[#fdfbf7] py-20 border-b border-stone-200">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold text-stone-900 mb-8 tracking-tight">The Ontology of World Politics</h1>
+            <p class="text-xl md:text-2xl text-stone-600 max-w-3xl mx-auto leading-relaxed font-light">
+                Explore the five maps of International Relations. From the carnage of 1919 to the AI races of 2026, these theories define how we see power, justice, and survival.
+            </p>
+            <div class="mt-12 flex flex-wrap justify-center gap-6">
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-800"></div><span class="text-xs font-bold uppercase tracking-widest text-stone-500">Realism</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-600"></div><span class="text-xs font-bold uppercase tracking-widest text-stone-500">Liberalism</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-orange-700"></div><span class="text-xs font-bold uppercase tracking-widest text-stone-500">Marxism</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-indigo-600"></div><span class="text-xs font-bold uppercase tracking-widest text-stone-500">Constructivism</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-teal-600"></div><span class="text-xs font-bold uppercase tracking-widest text-stone-500">Feminism</span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section 1: Theory DNA (Radar with Multi-Select) -->
+    <section id="profiler" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row gap-12">
+            <div class="md:w-1/3">
+                <h2 class="text-3xl font-bold text-stone-900 mb-6">1. Theory Profiler</h2>
+                <p class="text-stone-600 mb-8 leading-relaxed">
+                    Compare the structural assumptions of each framework. Use the toggles to overlap two theories and visualize the "Intellectual Friction" between them.
+                </p>
+                <div class="space-y-3" id="theory-toggles">
+                    <!-- Toggles generated by JS -->
+                </div>
+                <div id="profiler-insight" class="mt-8 p-6 bg-white border border-stone-200 rounded-xl shadow-sm text-sm text-stone-500 italic">
+                    Select one or two theories to compare their structural emphasis.
+                </div>
+            </div>
+            <div class="md:w-2/3 bg-white p-8 rounded-2xl border border-stone-200 shadow-xl flex flex-col items-center">
+                <div class="chart-container">
+                    <canvas id="theoryRadarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Mindmap Landscape -->
+    <section id="mindmap-sec" class="py-24 bg-white border-y border-stone-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4">2. The Intellectual Landscape</h2>
+                <p class="text-stone-600 max-w-2xl mx-auto">Explore the genealogy of International Relations. Click on branches to see how theories evolved from shared origins.</p>
+            </div>
+            <div id="mindmap-container" class="rounded-3xl border border-stone-200 shadow-2xl relative">
+                <canvas id="mindmap-canvas"></canvas>
+                <!-- Central Node -->
+                <div id="node-root" class="mindmap-node bg-stone-900 text-white px-8 py-4 rounded-full font-bold shadow-2xl text-lg" style="width: 220px;">International Political Theory</div>
+                
+                <!-- Secondary Nodes -->
+                <div id="node-rational" class="mindmap-node bg-stone-50 border-2 border-stone-300 px-6 py-3 rounded-2xl font-bold text-stone-800" style="width: 180px;">Rationalism</div>
+                <div id="node-critical" class="mindmap-node bg-stone-50 border-2 border-stone-300 px-6 py-3 rounded-2xl font-bold text-stone-800" style="width: 180px;">Critical Theory</div>
+
+                <!-- Theory Nodes -->
+                <div id="node-realism" class="mindmap-node bg-red-800 text-white p-4 rounded-xl shadow-lg text-sm font-bold" style="width: 130px;">Realism</div>
+                <div id="node-liberalism" class="mindmap-node bg-blue-600 text-white p-4 rounded-xl shadow-lg text-sm font-bold" style="width: 130px;">Liberalism</div>
+                <div id="node-marxism" class="mindmap-node bg-orange-700 text-white p-4 rounded-xl shadow-lg text-sm font-bold" style="width: 130px;">Marxism</div>
+                <div id="node-constructivism" class="mindmap-node bg-indigo-600 text-white p-4 rounded-xl shadow-lg text-sm font-bold" style="width: 150px;">Constructivism</div>
+                <div id="node-feminism" class="mindmap-node bg-teal-600 text-white p-4 rounded-xl shadow-lg text-sm font-bold" style="width: 130px;">Feminism</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: The Great Debates (Timeline) -->
+    <section class="py-24 bg-stone-100 border-b border-stone-200">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-stone-900 mb-16 text-center">3. Evolution of the Discipline</h2>
+            <div class="relative">
+                <div class="timeline-line"></div>
+                <div class="space-y-16">
+                    <div class="relative flex items-center justify-between">
+                        <div class="w-5/12 text-right pr-8">
+                            <h3 class="font-bold text-lg">1919: The Genesis</h3>
+                            <p class="text-sm text-stone-500">Woodrow Wilson Chair established at Aberystwyth. Focus: How to prevent war?</p>
+                        </div>
+                        <div class="w-4 h-4 rounded-full bg-stone-900 z-10 border-4 border-white"></div>
+                        <div class="w-5/12 pl-8">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded uppercase">Idealism</span>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="w-5/12 text-right pr-8">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-[10px] font-bold rounded uppercase">Realism</span>
+                        </div>
+                        <div class="w-4 h-4 rounded-full bg-stone-900 z-10 border-4 border-white"></div>
+                        <div class="w-5/12 pl-8">
+                            <h3 class="font-bold text-lg">1930s-40s: The 1st Debate</h3>
+                            <p class="text-sm text-stone-500">Realism (Carr/Morgenthau) challenges Idealism. Verdict: Power dictates reality, not law.</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="w-5/12 text-right pr-8">
+                            <h3 class="font-bold text-lg">1960s: Behavioralism</h3>
+                            <p class="text-sm text-stone-500">The 2nd Debate: Traditional intuition vs. Scientific methodology and data.</p>
+                        </div>
+                        <div class="w-4 h-4 rounded-full bg-stone-900 z-10 border-4 border-white"></div>
+                        <div class="w-5/12 pl-8">
+                            <span class="px-2 py-1 bg-stone-200 text-stone-600 text-[10px] font-bold rounded uppercase">Methodology</span>
+                        </div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="w-5/12 text-right pr-8">
+                            <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded uppercase">Constructivism</span>
+                        </div>
+                        <div class="w-4 h-4 rounded-full bg-stone-900 z-10 border-4 border-white"></div>
+                        <div class="w-5/12 pl-8">
+                            <h3 class="font-bold text-lg">1990s: Post-Cold War</h3>
+                            <p class="text-sm text-stone-500">The 3rd Debate: Materialism vs. Identity. Alexander Wendt: "Anarchy is what states make of it."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Comparative Matrix -->
+    <section id="matrix" class="py-24 bg-stone-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-stone-900 mb-10">4. Functional Comparison Matrix</h2>
+            <div class="overflow-x-auto rounded-2xl border border-stone-200 shadow-lg bg-white">
+                <table class="min-w-full divide-y divide-stone-200 text-left text-sm">
+                    <thead class="bg-stone-50 text-stone-500 uppercase font-bold text-[10px] tracking-widest">
+                        <tr>
+                            <th class="px-6 py-4">Theory</th>
+                            <th class="px-6 py-4">Primary Actor</th>
+                            <th class="px-6 py-4">Systemic Structure</th>
+                            <th class="px-6 py-4">Primary Goal</th>
+                            <th class="px-6 py-4">Action Logic</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        <tr class="hover:bg-red-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-red-800">Realism</td>
+                            <td class="px-6 py-4">Unitary State</td>
+                            <td class="px-6 py-4">Competitive Anarchy</td>
+                            <td class="px-6 py-4">Survival/Relative Power</td>
+                            <td class="px-6 py-4 italic">Consequences</td>
+                        </tr>
+                        <tr class="hover:bg-blue-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-blue-800">Liberalism</td>
+                            <td class="px-6 py-4">States, IOs, TNCs</td>
+                            <td class="px-6 py-4">Mitigated Anarchy</td>
+                            <td class="px-6 py-4">Prosperity/Peace</td>
+                            <td class="px-6 py-4 italic">Consequences</td>
+                        </tr>
+                        <tr class="hover:bg-orange-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-orange-800">Marxism</td>
+                            <td class="px-6 py-4">Economic Classes</td>
+                            <td class="px-6 py-4">Global Hierarchy</td>
+                            <td class="px-6 py-4">Emancipation/Equality</td>
+                            <td class="px-6 py-4 italic">Material Necessity</td>
+                        </tr>
+                        <tr class="hover:bg-indigo-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-indigo-800">Constructivism</td>
+                            <td class="px-6 py-4">Identities/Norms</td>
+                            <td class="px-6 py-4">Socially Constructed</td>
+                            <td class="px-6 py-4">Social Recognition</td>
+                            <td class="px-6 py-4 italic">Appropriateness</td>
+                        </tr>
+                        <tr class="hover:bg-teal-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-teal-800">Feminism</td>
+                            <td class="px-6 py-4">Gendered Subjects</td>
+                            <td class="px-6 py-4">Patriarchal Hierarchy</td>
+                            <td class="px-6 py-4">Gender Justice</td>
+                            <td class="px-6 py-4 italic">Reflexivity</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: The Case Lab (Detailed) -->
+    <section id="caselab" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold text-stone-900 mb-4">5. The Theory Simulation Lab</h2>
+            <p class="text-stone-600 max-w-2xl">Select a global crisis and toggle theoretical lenses to observe how the narrative of power shift, cooperation, and exploitation changes.</p>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden">
+            <!-- Lab Controls -->
+            <div class="bg-stone-900 text-white p-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] block">Case Environment</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setLabCase('arctic')" class="case-btn px-4 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm transition-all" data-case="arctic">Arctic Scramble</button>
+                            <button onclick="setLabCase('climate')" class="case-btn px-4 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm transition-all" data-case="climate">Paris Agreement</button>
+                            <button onclick="setLabCase('ai')" class="case-btn px-4 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm transition-all" data-case="ai">AI Arms Race</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] block">Theoretical Lens</label>
+                        <div class="flex flex-wrap gap-2" id="lens-container">
+                            <!-- JS populated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3">
+                <div class="lg:col-span-2 p-10 border-r border-stone-100">
+                    <div class="flex items-center gap-4 mb-6">
+                        <h3 id="lab-title" class="text-2xl font-bold text-stone-900 italic">Case Study</h3>
+                        <div id="lab-badge" class="px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-stone-100 text-stone-600">Select Lens</div>
+                    </div>
+                    <p id="lab-intro" class="text-stone-400 font-light mb-8 italic">Choose a case study and a lens to begin the simulation.</p>
+                    
+                    <div id="lab-content" class="space-y-8 fade-in opacity-0" style="animation-fill-mode: forwards;">
+                        <div>
+                            <h4 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">The Analysis</h4>
+                            <p id="lab-text" class="text-stone-700 leading-relaxed text-lg font-serif">--</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-5 bg-stone-50 border border-stone-200 rounded-xl">
+                                <h4 class="text-[10px] font-bold text-stone-400 uppercase mb-2">Primary Keyword</h4>
+                                <p id="lab-keyword" class="text-stone-900 font-bold">--</p>
+                                <p id="lab-keyword-def" class="text-stone-500 text-xs mt-1">--</p>
+                            </div>
+                            <div class="p-5 bg-stone-50 border border-stone-200 rounded-xl">
+                                <h4 class="text-[10px] font-bold text-stone-400 uppercase mb-2">Unit of Analysis</h4>
+                                <p id="lab-unit" class="text-stone-900 font-bold">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 p-10 bg-stone-50/50 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-stone-400 uppercase mb-8">Structural Prediction</h4>
+                        <div class="space-y-8">
+                            <div>
+                                <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                                    <span class="text-stone-500">Conflict Prob.</span>
+                                    <span id="stat-conflict-val" class="text-stone-900">0%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                                    <div id="stat-conflict-bar" class="h-full bg-red-600 transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] font-bold uppercase mb-2">
+                                    <span class="text-stone-500">Cooperation</span>
+                                    <span id="stat-coop-val" class="text-stone-900">0%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                                    <div id="stat-coop-bar" class="h-full bg-blue-600 transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-12 p-6 bg-white border border-stone-200 rounded-2xl">
+                        <h4 class="text-[10px] font-bold text-stone-400 uppercase mb-2">View of Other States</h4>
+                        <p id="lab-view-others" class="text-sm text-stone-600 italic">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Glossary -->
+    <footer class="bg-stone-900 text-stone-400 py-20 mt-20">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-16">
+            <div class="md:col-span-2">
+                <h3 class="text-white font-bold mb-6 text-xl">Conceptual Search</h3>
+                <div class="relative">
+                    <input type="text" id="glossary-search" oninput="searchGlossary()" placeholder="Search terms: Anarchy, Surplus Value, Hegemonic Masculinity..." class="w-full bg-stone-800 border-none rounded-xl p-4 text-white focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="glossary-results" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Results populated -->
+                </div>
+            </div>
+            <div>
+                <h3 class="text-white font-bold mb-6 text-xl">About the Framework</h3>
+                <p class="text-sm leading-relaxed">
+                    This interactive platform synthesizes the core findings of International Political Theory, mapping the structural divides between Rationalist and Critical schools of thought.
+                </p>
+                <p class="mt-6 text-xs text-stone-600">Generated for Academic Research. © 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA OBJECTS ---
+        const theories = {
+            realism: { name: "Realism", color: "#991b1b", radar: [95, 90, 10, 5, 20], insight: "Prioritizes material capabilities and state survival above all else." },
+            liberalism: { name: "Liberalism", color: "#2563eb", radar: [70, 40, 90, 30, 85], insight: "Emphasizes the role of international institutions and trade in mitigating anarchy." },
+            marxism: { name: "Marxism", color: "#c2410c", radar: [15, 100, 20, 10, 100], insight: "Views the world through economic hierarchies and class exploitation." },
+            constructivism: { name: "Constructivism", color: "#4f46e5", radar: [45, 10, 60, 100, 15], insight: "Identities and social norms are the primary drivers of state behavior." },
+            feminism: { name: "Feminism", color: "#0d9488", radar: [25, 30, 50, 90, 35], insight: "Critiques the gendered assumptions of power and state security." }
+        };
+
+        const caseData = {
+            arctic: {
+                title: "Arctic Resource Scramble",
+                intro: "Melting ice creates a resource prize. Is this a new frontier for war or law?",
+                realism: { text: "The Arctic is a zero-sum battlefield. As ice melts, states calculates relative gains, fearful that rivals will gain more. Military buildup is a logical response to the Security Dilemma.", keyword: "Relative Gains", keydef: "Comparative wealth/power compared to rivals.", unit: "Sovereign State", stats: [95, 5], others: "Lethal Threats" },
+                liberalism: { text: "UNCLOS and the Arctic Council provide legal frameworks to mitigate anarchy. Cooperation ensures absolute gains in trade and energy without costly war.", keyword: "Absolute Gains", keydef: "Total benefit regardless of others' growth.", unit: "International Regimes", stats: [15, 85], others: "Potential Partners" },
+                marxism: { text: "Imperialist expansion seeking new markets for surplus value. The conflict is between the digital bourgeoisie seeking lithium and the proletariat bearing ecological costs.", keyword: "Imperialism", keydef: "Expanding state power for capital markets.", unit: "Economic Class", stats: [80, 20], others: "Resources to Extract" },
+                constructivism: { text: "The Arctic's meaning depends on discourse. If constructed as 'Global Commons', cooperation follows. If constructed as 'National Frontier', conflict follows.", keyword: "Social Construction", keydef: "Reality defined by shared knowledge.", unit: "Shared Identity", stats: [50, 50], others: "Social Peers" },
+                feminism: { text: "State security focuses on borders, ignoring human security. The scramble destroys the social reproduction (food/care) of indigenous women.", keyword: "Human Security", keydef: "Security of individual well-being.", unit: "Gendered Subjects", stats: [70, 30], others: "Marginalized Voices" }
+            },
+            climate: {
+                title: "The Paris Agreement",
+                intro: "Can international law force states to act against their own economic growth?",
+                realism: { text: "States fear cutting emissions will hinder their manufacturing relative to rivals. Regulation is a 'Threat Multiplier' that risks state survival in a competitive system.", keyword: "Survival", keydef: "Primary goal of the unitary state.", unit: "Unitary State", stats: [85, 15], others: "Competitors" },
+                liberalism: { text: "Institutions solve the Collective Action Problem. Interdependence means no state survives alone; green trade is a positive-sum game.", keyword: "Interdependence", keydef: "Mutual reliance raising non-coop costs.", unit: "Global Institutions", stats: [10, 90], others: "Necessary Collaborators" },
+                marxism: { text: "Paris is 'Ecological Modernization'—a fix to save capitalism. It shifts pollution to the Periphery while the Core profits from green tech.", keyword: "Surplus Value", keydef: "Profit extracted from nature/labor.", unit: "Historic Bloc", stats: [75, 25], others: "Resource Periphery" },
+                constructivism: { text: "Climate change is now a moral emergency. States sign treaties to maintain their identity as 'Civilized Leaders' and avoid shaming.", keyword: "Logic of Appropriateness", keydef: "Acting based on social rightness.", unit: "Norm Entrepreneurs", stats: [30, 70], others: "Moral Audience" },
+                feminism: { text: "Climate change hurts those performing social reproduction. Technical talks ignore gendered vulnerability and the ethics of care.", keyword: "Social Reproduction", keydef: "Unpaid care labor sustaining life.", unit: "Human Individuals", stats: [65, 35], others: "Invisible Agents" }
+            },
+            ai: {
+                title: "AI Arms Race",
+                intro: "Dual-use technology: Whoever leads in AI leads in cyberwarfare. How is it governed?",
+                realism: { text: "AI is the ultimate dual-use technology. A Security Dilemma exists: failing to lead means total vulnerability to autonomous rivals.", keyword: "Dual-Use Tech", keydef: "Civilian tech with military utility.", unit: "Military Power", stats: [98, 2], others: "Cyber Adversaries" },
+                liberalism: { text: "Global regimes like the OECD AI Principles manage externalities. Transparency reduces the fear of cheating, allowing shared safety standards.", keyword: "International Regimes", keydef: "Principles/Rules governing a sector.", unit: "Regulatory Bodies", stats: [25, 75], others: "Interoperable Peers" },
+                marxism: { text: "AI automates labor to maximize surplus value for the Digital Bourgeoisie. It centralizes power in tech hubs while the working class is displaced.", keyword: "Digital Capitalism", keydef: "Data/Automation as the new capital.", unit: "Digital Bourgeoisie", stats: [85, 15], others: "Labor to Automate" },
+                constructivism: { text: "Is AI a 'Robot Slave' or a 'New Intelligence'? We are constructing the norms of AI ethics to define what 'Responsible Tech' means.", keyword: "Norm Contestation", keydef: "Dispute over what behavior is right.", unit: "Scientific Community", stats: [40, 60], others: "Ethical Subjects" },
+                feminism: { text: "AI mirrors hegemonic masculinity by encoding existing social biases. It surveils marginalized groups while devaluing the human ethics of care.", keyword: "Hegemonic Masculinity", keydef: "Dominant competitive male power ideal.", unit: "Encoded Subjects", stats: [75, 25], others: "Biased Data-Points" }
+            }
+        };
+
+        const glossary = [
+            { term: "Anarchy", def: "A system lacking a central world government." },
+            { term: "Security Dilemma", def: "When one state's defense creates fear in another." },
+            { term: "Absolute Gains", def: "Focusing on total benefit rather than comparison." },
+            { term: "Relative Gains", def: "Concern over who gains more from cooperation." },
+            { term: "Surplus Value", def: "The profit kept by owners after paying labor costs." },
+            { term: "Social Reproduction", def: "The unpaid care work that maintains the labor force." },
+            { term: "Logic of Appropriateness", def: "Action based on identity and social norms." },
+            { term: "Hegemonic Masculinity", def: "A social structure prioritizing dominance and strength." }
+        ];
+
+        // --- STATE ---
+        let selectedTheories = [];
+        let radarChart = null;
+        let currentCase = 'arctic';
+
+        // --- CORE FUNCTIONS ---
+
+        function init() {
+            initRadar();
+            renderToggles();
+            renderLensSelectors();
+            setLabCase('arctic');
+            drawMindmap();
+            window.onresize = drawMindmap;
+        }
+
+        function initRadar() {
+            const ctx = document.getElementById('theoryRadarChart').getContext('2d');
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['State-Centricity', 'Materialism', 'Peace Optimism', 'Identity Focus', 'Economic Focus'],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e5e7eb' },
+                            grid: { color: '#e5e7eb' },
+                            pointLabels: { font: { size: 12, family: 'Inter', weight: 'bold' } },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderToggles() {
+            const container = document.getElementById('theory-toggles');
+            container.innerHTML = Object.keys(theories).map(key => `
+                <button onclick="toggleTheory('${key}')" id="toggle-${key}" class="w-full flex items-center justify-between p-4 border rounded-xl hover:bg-stone-50 transition-all group">
+                    <span class="font-bold text-stone-700">${theories[key].name}</span>
+                    <div class="w-4 h-4 rounded-full border-2 border-stone-200 group-hover:border-stone-400 transition-colors" id="dot-${key}"></div>
+                </button>
+            `).join('');
+        }
+
+        function toggleTheory(key) {
+            const index = selectedTheories.indexOf(key);
+            if (index > -1) {
+                selectedTheories.splice(index, 1);
+                document.getElementById(`toggle-${key}`).classList.remove('bg-stone-100', 'border-stone-400');
+                document.getElementById(`dot-${key}`).style.backgroundColor = 'transparent';
+                document.getElementById(`dot-${key}`).style.borderColor = '#e5e7eb';
+            } else {
+                if (selectedTheories.length >= 2) {
+                    const removed = selectedTheories.shift();
+                    document.getElementById(`toggle-${removed}`).classList.remove('bg-stone-100', 'border-stone-400');
+                    document.getElementById(`dot-${removed}`).style.backgroundColor = 'transparent';
+                }
+                selectedTheories.push(key);
+                document.getElementById(`toggle-${key}`).classList.add('bg-stone-100', 'border-stone-400');
+                document.getElementById(`dot-${key}`).style.backgroundColor = theories[key].color;
+                document.getElementById(`dot-${key}`).style.borderColor = theories[key].color;
+            }
+            updateRadarChart();
+        }
+
+        function updateRadarChart() {
+            radarChart.data.datasets = selectedTheories.map(key => ({
+                label: theories[key].name,
+                data: theories[key].radar,
+                backgroundColor: theories[key].color + '33',
+                borderColor: theories[key].color,
+                pointBackgroundColor: theories[key].color,
+                borderWidth: 3
+            }));
+            radarChart.update();
+            
+            const insight = document.getElementById('profiler-insight');
+            if (selectedTheories.length === 1) {
+                insight.innerHTML = `<strong>${theories[selectedTheories[0]].name}</strong>: ${theories[selectedTheories[0]].insight}`;
+            } else if (selectedTheories.length === 2) {
+                insight.innerHTML = `Comparing <strong>${theories[selectedTheories[0]].name}</strong> and <strong>${theories[selectedTheories[1]].name}</strong>. Observe the divergence in ${selectedTheories.includes('realism') && selectedTheories.includes('constructivism') ? 'Materialism vs Identity' : 'Structural Priorities'}.`;
+            } else {
+                insight.innerHTML = "Select one or two theories to compare their structural emphasis.";
+            }
+        }
+
+        // --- MINDMAP LOGIC ---
+        const mapNodes = {
+            root: { x: 0.5, y: 0.6 },
+            rational: { x: 0.25, y: 0.4 },
+            critical: { x: 0.75, y: 0.4 },
+            realism: { x: 0.1, y: 0.15 },
+            liberalism: { x: 0.4, y: 0.15 },
+            marxism: { x: 0.6, y: 0.15 },
+            constructivism: { x: 0.85, y: 0.15 },
+            feminism: { x: 0.9, y: 0.4 }
+        };
+
+        function drawMindmap() {
+            const container = document.getElementById('mindmap-container');
+            const canvas = document.getElementById('mindmap-canvas');
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const getP = (id) => {
+                const el = document.getElementById('node-' + id);
+                const layout = mapNodes[id];
+                const x = canvas.width * layout.x;
+                const y = canvas.height * layout.y;
+                el.style.left = (x - el.offsetWidth / 2) + 'px';
+                el.style.top = (y - el.offsetHeight / 2) + 'px';
+                return { x, y };
+            };
+
+            const pRoot = getP('root');
+            const pRat = getP('rational');
+            const pCri = getP('critical');
+            const pRea = getP('realism');
+            const pLib = getP('liberalism');
+            const pMar = getP('marxism');
+            const pCon = getP('constructivism');
+            const pFem = getP('feminism');
+
+            ctx.strokeStyle = '#d6d3d1';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+
+            const link = (a, b) => {
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+            };
+
+            link(pRoot, pRat); link(pRoot, pCri);
+            link(pRat, pRea); link(pRat, pLib);
+            link(pCri, pMar); link(pCri, pCon); link(pCri, pFem);
+        }
+
+        // --- CASE LAB LOGIC ---
+
+        function renderLensSelectors() {
+            const container = document.getElementById('lens-container');
+            container.innerHTML = Object.keys(theories).map(key => `
+                <button onclick="applyLens('${key}')" class="lens-btn px-4 py-2 rounded-lg bg-stone-800 border border-stone-700 text-sm transition-all hover:bg-stone-700" data-lens="${key}">${theories[key].name}</button>
+            `).join('');
+        }
+
+        function setLabCase(id) {
+            currentCase = id;
+            document.querySelectorAll('.case-btn').forEach(btn => {
+                btn.classList.toggle('bg-blue-600', btn.dataset.case === id);
+                btn.classList.toggle('border-blue-400', btn.dataset.case === id);
+            });
+            resetLab();
+        }
+
+        function resetLab() {
+            document.getElementById('lab-title').innerText = caseData[currentCase].title;
+            document.getElementById('lab-intro').innerText = caseData[currentCase].intro;
+            document.getElementById('lab-content').classList.add('opacity-0');
+            document.getElementById('lab-badge').innerText = "Select Lens";
+            document.getElementById('lab-badge').className = "px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-stone-100 text-stone-600";
+            
+            updateStats(0, 0);
+        }
+
+        function applyLens(lens) {
+            const data = caseData[currentCase][lens];
+            const theory = theories[lens];
+
+            document.querySelectorAll('.lens-btn').forEach(btn => {
+                btn.classList.toggle('ring-2', btn.dataset.lens === lens);
+                btn.classList.toggle('ring-blue-500', btn.dataset.lens === lens);
+            });
+
+            const content = document.getElementById('lab-content');
+            content.classList.remove('opacity-0');
+            
+            document.getElementById('lab-badge').innerText = theory.name;
+            document.getElementById('lab-badge').style.backgroundColor = theory.color + '22';
+            document.getElementById('lab-badge').style.color = theory.color;
+            
+            document.getElementById('lab-text').innerText = data.text;
+            document.getElementById('lab-keyword').innerText = data.keyword;
+            document.getElementById('lab-keyword-def').innerText = data.keydef;
+            document.getElementById('lab-unit').innerText = data.unit;
+            document.getElementById('lab-view-others').innerText = data.others;
+
+            updateStats(data.stats[0], data.stats[1]);
+        }
+
+        function updateStats(conflict, coop) {
+            document.getElementById('stat-conflict-val').innerText = conflict + '%';
+            document.getElementById('stat-conflict-bar').style.width = conflict + '%';
+            document.getElementById('stat-coop-val').innerText = coop + '%';
+            document.getElementById('stat-coop-bar').style.width = coop + '%';
+        }
+
+        // --- GLOSSARY SEARCH ---
+        function searchGlossary() {
+            const q = document.getElementById('glossary-search').value.toLowerCase();
+            const results = document.getElementById('glossary-results');
+            results.innerHTML = '';
+            if (q.length < 2) return;
+
+            glossary.filter(g => g.term.toLowerCase().includes(q) || g.def.toLowerCase().includes(q))
+                .forEach(g => {
+                    results.innerHTML += `
+                        <div class="p-4 bg-stone-800/50 rounded-lg border border-stone-700 fade-in">
+                            <h4 class="text-white font-bold text-sm mb-1">${g.term}</h4>
+                            <p class="text-xs text-stone-500 leading-relaxed">${g.def}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
